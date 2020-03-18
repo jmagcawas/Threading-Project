@@ -7,7 +7,7 @@ public class HelloThread{
 	// the name of the current thread
 	static void threadMessage(String message) {
 		String threadName =
-				Thread.currentThread().getName();
+				Thread.currentThread().getName(); // get thread name
 		System.out.format("%s: %s%n",
 				threadName,
 				message);
