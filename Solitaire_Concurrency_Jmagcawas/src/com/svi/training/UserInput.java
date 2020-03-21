@@ -17,7 +17,6 @@ public class UserInput {
 				while(wrongInput != false){
 					System.out.println("Choose your DrawType (Type 1 for DrawOne / Type 3 for DrawThree) :");
 					userInput = scan.next();
-					
 					switch (userInput){
 						case "1" :
 							System.out.println("You Choose 1");
@@ -31,7 +30,7 @@ public class UserInput {
 							break;
 						default:
 							System.out.println("Wrong input");
-							wrongInput = false;
+							wrongInput = true;
 							break;
 					}
 					
