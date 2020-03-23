@@ -18,25 +18,7 @@ public class Solitaire{
 				threadName,
 				message);
 	}
-//	@Override
-//	public void run() {
-//		for (int i = 0; i < UserInput.gamecount; i++) {
-//			UserInput.gameplayed++;
-//			GameManager game = new GameManager();
-//			game.createManuever();
-//			game.createFoundation();
-//			game.lastFaceUp();
-//			game.executeProcedure();
-//			try {
-//				Thread.sleep(4000);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			threadMessage("Thread terminated");
-//		}
-//
-//	}
+	
 	static void shutdownAndAwaitTermination(ExecutorService e) {
 		   e.shutdown(); // Disable new tasks from being submitted
 		   try {
@@ -55,103 +37,53 @@ public class Solitaire{
 		   }
 		   System.out.println("Thread shutdown");
 		 }
+	
+	static void originTask() {
+		long startTime = System.currentTimeMillis();
+		 for (int i = 0; i < UserInput.gamecount; i++) {
+			 UserInput.gameplayed++;
+			 GameManager game = new GameManager();
+			 game.createManuever();
+			 game.createFoundation();
+			 game.lastFaceUp();
+			 game.executeProcedure();
+			 System.out.println("Executing Task1 inside : " + Thread.currentThread().getName());
+			 
+		 }
+		 System.out.println("Time elapsed multi thread: " + (System.currentTimeMillis() - startTime));
+		 try {
+			 TimeUnit.SECONDS.sleep(1);
+		 } catch (InterruptedException ex) {
+			 throw new IllegalStateException(ex);
+		 }
+	}
 
-public static void main(String[] args)	throws InterruptedException {
+	public static void main(String[] args)	throws InterruptedException {
 		// TODO Auto-generated method stub
-	UserInput input = new UserInput(); // get user input
-	input.displayInput();
-	
-	//ForkJoinPool e = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-	ExecutorService e = Executors.newFixedThreadPool(2);
-	//ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-	
-	 Runnable task1 = () -> {
-		 long startTime = System.currentTimeMillis();
-		 for (int i = 0; i < UserInput.gamecount; i++) {
-			 UserInput.gameplayed++;
-			 GameManager game = new GameManager();
-			 game.createManuever();
-			 game.createFoundation();
-			 game.lastFaceUp();
-			 game.executeProcedure();
-			 System.out.println("Executing Task1 inside : " + Thread.currentThread().getName());
-			 
-		 }
-		 System.out.println("Time elapsed multi thread: " + (System.currentTimeMillis() - startTime));
-		 try {
-			 TimeUnit.SECONDS.sleep(1);
-		 } catch (InterruptedException ex) {
-			 throw new IllegalStateException(ex);
-		 }
-		 
-//	
-//			System.out.printf("******************************************\n");
-//			System.out.printf("Main: Parallelism: %d\n", e.getParallelism());
-//			System.out.printf("Main: Active Threads: %d\n", e.getActiveThreadCount());
-//			System.out.printf("Main: Task Count: %d\n", e.getQueuedTaskCount());
-//			System.out.printf("Main: Steal Count: %d\n", e.getStealCount());
-//			System.out.printf("******************************************\n");
-     };
-     
-	 Runnable task2 = () -> {
-		 long startTime = System.currentTimeMillis();
-		 for (int i = 0; i < UserInput.gamecount; i++) {
-			 UserInput.gameplayed++;
-			 GameManager game = new GameManager();
-			 game.createManuever();
-			 game.createFoundation();
-			 game.lastFaceUp();
-			 game.executeProcedure();
-			 System.out.println("Executing Task1 inside : " + Thread.currentThread().getName());
-		 }
-		 System.out.println("Time elapsed multi thread: " + (System.currentTimeMillis() - startTime));
-		 try {
-			 TimeUnit.SECONDS.sleep(1);
-		 } catch (InterruptedException ex) {
-			 throw new IllegalStateException(ex);
-		 }
-		 
-	 };
-	 
-	 Runnable task3 = () -> {
-		 long startTime = System.currentTimeMillis();
-		 for (int i = 0; i < UserInput.gamecount; i++) {
-			 UserInput.gameplayed++;
-			 GameManager game = new GameManager();
-			 game.createManuever();
-			 game.createFoundation();
-			 game.lastFaceUp();
-			 game.executeProcedure();
-			 System.out.println("Executing Task1 inside : " + Thread.currentThread().getName());
-			 
-		 }
-		 System.out.println("Time elapsed multi thread: " + (System.currentTimeMillis() - startTime));
-		 try {
-			 TimeUnit.SECONDS.sleep(1);
-		 } catch (InterruptedException ex) {
-			 throw new IllegalStateException(ex);
-		 }
-		 
-	 };
-	 
-	 
-	 
-     e.submit(task1);
-     e.submit(task2);
-     e.submit(task3);
-//		threadMessage("Waiting for Solitaire thread to finish");
-//		Thread t = Thread.currentThread();
-//		while (t.isAlive()) {
-//			threadMessage("Still waiting...");
-//			// Wait maximum of 1 second
-//			// for MessageLoop thread
-//			// to finish.
-//	
-//			t.join(1000);
-//			
-//		}
-//	shutdownAndAwaitTermination(e);
-     e.shutdown();
-//     shutdownAndAwaitTermination(e);
+		UserInput input = new UserInput(); // get user input
+		input.displayInput();
+
+		//ForkJoinPool e = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+		ExecutorService e = Executors.newFixedThreadPool(2);
+		//ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		
+		Runnable task1 = () -> {
+			originTask();
+		};
+
+//		Runnable task2 = () -> {
+//			originTask();
+//		};
+//
+//		Runnable task3 = () -> {
+//			originTask();
+//		};
+
+		e.submit(task1);
+//		e.submit(task2);
+//		e.submit(task3);
+
+//		e.shutdown();
+		shutdownAndAwaitTermination(e);
 }
 }

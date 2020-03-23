@@ -1,4 +1,4 @@
-package com.svi.training;
+package com.svi.training.samples;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Random;

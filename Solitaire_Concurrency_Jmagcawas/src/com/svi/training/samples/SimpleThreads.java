@@ -1,4 +1,4 @@
-package com.svi.training;
+package com.svi.training.samples;
 
 public class SimpleThreads {
 	// Display a message, preceded by

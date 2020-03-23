@@ -1,4 +1,4 @@
-package com.svi.training;
+package com.svi.training.samples;
 
 	final public class ImmutableRGB {
 	 // Values must be between 0 and 255.
