@@ -62,7 +62,7 @@ public static void main(String[] args)	throws InterruptedException {
 	input.displayInput();
 	
 	//ForkJoinPool e = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-	ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	ExecutorService e = Executors.newFixedThreadPool(2);
 	//ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	
 	 Runnable task1 = () -> {
