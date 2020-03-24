@@ -71,17 +71,17 @@ public class Solitaire{
 			originTask();
 		};
 
-//		Runnable task2 = () -> {
-//			originTask();
-//		};
+		Runnable task2 = () -> {
+			originTask();
+		};
 //
-//		Runnable task3 = () -> {
-//			originTask();
-//		};
+		Runnable task3 = () -> {
+			originTask();
+		};
 
 		e.submit(task1);
-//		e.submit(task2);
-//		e.submit(task3);
+		e.submit(task2);
+		e.submit(task3);
 
 //		e.shutdown();
 		shutdownAndAwaitTermination(e);

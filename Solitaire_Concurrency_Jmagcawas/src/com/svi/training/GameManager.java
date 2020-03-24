@@ -20,7 +20,7 @@ public class GameManager{
 	/**
 	 * Create Manuever 
 	 */
-	public void createManuever(){
+	public synchronized void createManuever(){
 		//initiate deck
 		deck.initializeDeck();
 
@@ -39,7 +39,7 @@ public class GameManager{
 	/**
 	 * Create Foundation 
 	 */
-	public void createFoundation() {
+	public synchronized void createFoundation() {
 		for (int i = 0; i < foundation.length; i++) { 
 			foundation[i] = new ArrayList<>(); 
 		}
@@ -47,7 +47,7 @@ public class GameManager{
 	/**
 	 * faceuplast cards
 	 */
-	public void lastFaceUp(){
+	public synchronized void lastFaceUp(){
 		for (int i = 0; i < manuever.length; i++) {
 			manuever[i].get(manuever[i].size()-1).setFaceup();
 		}
@@ -58,253 +58,17 @@ public class GameManager{
 		System.out.println();
 	}
 
-	public Card getTalon() {
+	public synchronized Card getTalon() {
 		if (!waste.isEmpty())
 			return waste.get(waste.size() - 1);
 
 		return null;
 	}
 
-	public boolean moveToTalon() {
-		for (int i = 0; i < manuever.length; i++){
-			ArrayList<Card> sourceManeuver = manuever[i];
-			
-			for (int m = 0; m < sourceManeuver.size(); m++) {
-				Card movingCard = sourceManeuver.get(m);
-
-				// skip this card if it is face down
-				if (!movingCard.getFaceStatus()) continue;
-
-				// check if this movingCard can be turn over to any foundation
-				// and also if this moving card is the last card in maneuver
-				for (int j = 0; j < foundation.length; j++) {
-					ArrayList<Card> sourceFoundation = foundation[j];
-					if (movingCard.canTurnOverToFoundation(sourceFoundation) &&
-							m == sourceManeuver.size() - 1) {
-
-						if (sourceFoundation.size() > 0) {
-							Card lastCardOnFoundation = sourceFoundation.get(sourceFoundation.size() - 1);
-							// move only if this is the first-time maneuver
-							if (movingCard.lastParent != lastCardOnFoundation) {
-								sourceFoundation.add(movingCard);
-								sourceManeuver.remove(movingCard);
-
-								// face up the last card after the movingCard (if not empty)
-								if (sourceManeuver.size() > 0)
-									sourceManeuver.get(sourceManeuver.size() - 1).setFaceup();
-
-								// set hasMove to true to end the loop check
-								hasMove = true;
-
-								movingCard.lastParent = lastCardOnFoundation;
-							}
-						} else {
-							sourceFoundation.add(movingCard);
-							sourceManeuver.remove(movingCard);
-
-							// face up the last card after the movingCard (if not empty)
-							if (sourceManeuver.size() > 0)
-								sourceManeuver.get(sourceManeuver.size() - 1).setFaceup();
-
-							// set hasMove to true to end the loop check
-							hasMove = true;
-						}
-					}
-				}
-			}
-		}
-		return hasMove;
-	}
-
-	public boolean moveToManuever() {
-		// skip this card if it is face down
-
-		for (int i = 0; i < manuever.length; i++){
-			ArrayList<Card> sourceManeuver = manuever[i];
-			for (int m = 0; m < sourceManeuver.size(); m++) {
-				Card movingCard = sourceManeuver.get(m);
-				//manuever to manuever prioritizing KING to move on the empty spaces
-				for (int j = 0; j < manuever.length; j++) {
-					ArrayList<Card> destinationManeuver = manuever[j];
-					if (!movingCard.getFaceStatus()) continue;
-					if (destinationManeuver.size() < 1) {
-						// move the movingCard in this blank maneuver if it is a king
-						if (movingCard.getRank() == Rank.KING) {
-							for(int n = m; n < sourceManeuver.size(); n++) {
-
-								// move only if this is the first-time maneuver
-								if (movingCard.lastParent != null) {
-
-									// move the movingCard together with its children
-									destinationManeuver.addAll(sourceManeuver.subList(m, sourceManeuver.size()));
-									sourceManeuver.removeAll(sourceManeuver.subList(m, sourceManeuver.size()));
-
-									// face up the last card after the movingCard (if not empty)
-									if (sourceManeuver.size() > 0)
-										sourceManeuver.get(sourceManeuver.size()-1).setFaceup();
-
-									// assign movingCard last parent as null
-									movingCard.lastParent = null;
-									printResult();
-								}
-							}
-						}
-					}
-
-					// skip moving cards no card was found in this destination maneuver
-					if (destinationManeuver.size() < 1) continue;
-
-					Card destinationCard = destinationManeuver.get(destinationManeuver.size() - 1);
-					if (movingCard.compareTo(destinationCard) == -1) {
-
-						if (movingCard.lastParent != destinationCard) {
-
-							// move the movingCard together with its children
-							destinationManeuver.addAll(sourceManeuver.subList(m, sourceManeuver.size()));
-							sourceManeuver.removeAll(sourceManeuver.subList(m, sourceManeuver.size()));
-							hasMove = true;
-
-							// face up the last card after the movingCard (if not empty)
-							if (sourceManeuver.size() > 0)
-								sourceManeuver.get(sourceManeuver.size()-1).setFaceup();
-
-							// assign movingCard last parent as destinationCard
-							movingCard.lastParent = destinationCard;
-
-							printResult();
-						}
-					}
-				}
-			}
-		}
-		return hasMove;
-	}
-
-	public boolean DrawTalon() {
-		if (hasMove == true) {
-			System.out.println("No possible move in maneuver, picking talon card from deck");
-
-			// Draw card from deck
-			int drawCount = UserInput.drawcount;
-
-			ArrayList<Card> deckCards = deck.cards;
-			printResult();
-
-			Card talon = getTalon();
-			if (talon != null) {
-				// Assume that the first source of talon card is in the waste list
-				ArrayList<Card> talonSource = waste;
-
-				// check if this talon can be turn over to any foundation
-				for (int j = 0; j < foundation.length; j++) {
-					if (talon.canTurnOverToFoundation(foundation[j])) {
-						Card lastCardOnFoundation = Card.Blank;
-						if (foundation[j].size() > 1)
-							lastCardOnFoundation = foundation[j].get(foundation[j].size() - 1);
-						foundation[j].add(talon);
-						waste.remove(talon);
-						// Change the talon's source to this foundation
-						talonSource = foundation[j];
-						talon.lastParent = null;
-
-						break;
-					}
-				}
-
-				// run maneuver once again to fill in talon card
-				for (int i = 0; i < manuever.length; i++) {
-					ArrayList<Card> destinationManeuver = manuever[i];
-
-					// move the talon card in this blank maneuver if it is a king
-					if (destinationManeuver.size() < 1) {
-						if (talon.getRank() == Rank.KING) {
-							// move the talon to blank maneuver
-							if (talon.lastParent != null) {
-								destinationManeuver.add(talon);
-								waste.remove(talon);
-								talon.lastParent = null;
-							}
-						}
-					}
-
-					// skip moving cards as no card was found in this destination maneuver
-					if (destinationManeuver.size() < 1) continue;
-
-					Card destinationCard = destinationManeuver.get(destinationManeuver.size() - 1);
-					if (talon.compareTo(destinationCard) == -1) {
-						if (talon.lastParent != destinationCard) {
-							// move the talon to the end of the maneuver
-							destinationManeuver.add(talon);
-
-							// remove talon to its depending on its source
-							talonSource.remove(talon);
-
-							// set hasMove to true to end the loop check
-							hasMove = true;
-							
-							printResult();
-							talon.lastParent = destinationCard;
-							break;
-						}
-					}
-				}
-			}
-
-			// draw cards to waste
-			if (deckCards.size() > 0) {
-				// If the deck is not empty
-				for (int i = 0; i < drawCount; i++) {
-					// Push cards to talon n times
-					if (!deckCards.isEmpty()) {
-						Card drawCard = deckCards.get(deckCards.size() - 1);
-						waste.add(drawCard);
-						drawCard.setFaceup();
-						deckCards.remove(deckCards.size() - 1);
-
-					}
-				}
-			} else {
-				// Put all card in waste list into the deck
-				System.out.println("Resetting deck");
-				deck.cards = new ArrayList<Card>(waste);
-				Collections.reverse(deck.cards);
-				waste.clear();
-				// increment lose indicator
-				currentIndicator++;
-			}
-		}
-		System.out.println("--------------------");
-		printResult();
-		System.out.println("--------------------");
-		//pressAnyKeyToContinue();
-		return hasMove;
-		
-		
-	}
-	public void checkFoundation() {
-		if (!foundationHasAllKing()) {
-			// reset lose indicator to zero if there is any move happened last maneuver
-			if (hasMove) {currentIndicator = 0;} 
-
-			if (currentIndicator <= loseIndicator) {
-				executeProcedure();
-			} else {
-				System.out.println("You've lost the game!");
-				System.out.println("Score: " + UserInput.gamewon + " out of " + UserInput.gameplayed);
-				printResult();
-			}
-		} else {
-			UserInput.gamewon++;
-			System.out.println("You've won the game!");
-			System.out.println("Score: " + UserInput.gamewon + " out of " + UserInput.gameplayed);
-		}
-	}
-
-//	public void executeProcedure(){
-//		boolean hasMove = false;
+//	public void moveToTalon() {
 //		for (int i = 0; i < manuever.length; i++){
 //			ArrayList<Card> sourceManeuver = manuever[i];
-//
+//			
 //			for (int m = 0; m < sourceManeuver.size(); m++) {
 //				Card movingCard = sourceManeuver.get(m);
 //
@@ -344,19 +108,26 @@ public class GameManager{
 //
 //							// set hasMove to true to end the loop check
 //							hasMove = true;
+//							
 //						}
-//
-//						break;
 //					}
 //				}
+//			}
+//		}
+//		moveToManuever();
+//	}
 //
-//				// skip this card if it is face down
-//				if (!movingCard.getFaceStatus()) continue;
+//	public void moveToManuever() {
+//		// skip this card if it is face down
 //
+//		for (int i = 0; i < manuever.length; i++){
+//			ArrayList<Card> sourceManeuver = manuever[i];
+//			for (int m = 0; m < sourceManeuver.size(); m++) {
+//				Card movingCard = sourceManeuver.get(m);
 //				//manuever to manuever prioritizing KING to move on the empty spaces
 //				for (int j = 0; j < manuever.length; j++) {
 //					ArrayList<Card> destinationManeuver = manuever[j];
-//
+//					if (!movingCard.getFaceStatus()) continue;
 //					if (destinationManeuver.size() < 1) {
 //						// move the movingCard in this blank maneuver if it is a king
 //						if (movingCard.getRank() == Rank.KING) {
@@ -402,12 +173,16 @@ public class GameManager{
 //							movingCard.lastParent = destinationCard;
 //
 //							printResult();
+//							
 //						}
 //					}
 //				}
 //			}
 //		}
-////uppercopied
+//		DrawTalon();
+//	}
+//
+//	public void DrawTalon() {
 //		if (!hasMove) {
 //			System.out.println("No possible move in maneuver, picking talon card from deck");
 //
@@ -468,7 +243,7 @@ public class GameManager{
 //
 //							// set hasMove to true to end the loop check
 //							hasMove = true;
-//
+//							
 //							printResult();
 //							talon.lastParent = destinationCard;
 //							break;
@@ -499,13 +274,16 @@ public class GameManager{
 //				// increment lose indicator
 //				currentIndicator++;
 //			}
+//			checkFoundation();
 //		}
 //		System.out.println("--------------------");
 //		printResult();
 //		System.out.println("--------------------");
 //		//pressAnyKeyToContinue();
-////uppercopied
 //		
+//		
+//	}
+//	public void checkFoundation() {
 //		if (!foundationHasAllKing()) {
 //			// reset lose indicator to zero if there is any move happened last maneuver
 //			if (hasMove) {currentIndicator = 0;} 
@@ -523,9 +301,233 @@ public class GameManager{
 //			System.out.println("Score: " + UserInput.gamewon + " out of " + UserInput.gameplayed);
 //		}
 //	}
+
+	public synchronized void executeProcedure(){
+		boolean hasMove = false;
+		for (int i = 0; i < manuever.length; i++){
+			ArrayList<Card> sourceManeuver = manuever[i];
+
+			for (int m = 0; m < sourceManeuver.size(); m++) {
+				Card movingCard = sourceManeuver.get(m);
+
+				// skip this card if it is face down
+				if (!movingCard.getFaceStatus()) continue;
+
+				// check if this movingCard can be turn over to any foundation
+				// and also if this moving card is the last card in maneuver
+				for (int j = 0; j < foundation.length; j++) {
+					ArrayList<Card> sourceFoundation = foundation[j];
+					if (movingCard.canTurnOverToFoundation(sourceFoundation) &&
+							m == sourceManeuver.size() - 1) {
+
+						if (sourceFoundation.size() > 0) {
+							Card lastCardOnFoundation = sourceFoundation.get(sourceFoundation.size() - 1);
+							// move only if this is the first-time maneuver
+							if (movingCard.lastParent != lastCardOnFoundation) {
+								sourceFoundation.add(movingCard);
+								sourceManeuver.remove(movingCard);
+
+								// face up the last card after the movingCard (if not empty)
+								if (sourceManeuver.size() > 0)
+									sourceManeuver.get(sourceManeuver.size() - 1).setFaceup();
+
+								// set hasMove to true to end the loop check
+								hasMove = true;
+
+								movingCard.lastParent = lastCardOnFoundation;
+							}
+						} else {
+							sourceFoundation.add(movingCard);
+							sourceManeuver.remove(movingCard);
+
+							// face up the last card after the movingCard (if not empty)
+							if (sourceManeuver.size() > 0)
+								sourceManeuver.get(sourceManeuver.size() - 1).setFaceup();
+
+							// set hasMove to true to end the loop check
+							hasMove = true;
+						}
+
+						break;
+					}
+				}
+
+				// skip this card if it is face down
+				if (!movingCard.getFaceStatus()) continue;
+
+				//manuever to manuever prioritizing KING to move on the empty spaces
+				for (int j = 0; j < manuever.length; j++) {
+					ArrayList<Card> destinationManeuver = manuever[j];
+
+					if (destinationManeuver.size() < 1) {
+						// move the movingCard in this blank maneuver if it is a king
+						if (movingCard.getRank() == Rank.KING) {
+							for(int n = m; n < sourceManeuver.size(); n++) {
+
+								// move only if this is the first-time maneuver
+								if (movingCard.lastParent != null) {
+
+									// move the movingCard together with its children
+									destinationManeuver.addAll(sourceManeuver.subList(m, sourceManeuver.size()));
+									sourceManeuver.removeAll(sourceManeuver.subList(m, sourceManeuver.size()));
+
+									// face up the last card after the movingCard (if not empty)
+									if (sourceManeuver.size() > 0)
+										sourceManeuver.get(sourceManeuver.size()-1).setFaceup();
+
+									// assign movingCard last parent as null
+									movingCard.lastParent = null;
+									printResult();
+								}
+							}
+						}
+					}
+
+					// skip moving cards no card was found in this destination maneuver
+					if (destinationManeuver.size() < 1) continue;
+
+					Card destinationCard = destinationManeuver.get(destinationManeuver.size() - 1);
+					if (movingCard.compareTo(destinationCard) == -1) {
+
+						if (movingCard.lastParent != destinationCard) {
+
+							// move the movingCard together with its children
+							destinationManeuver.addAll(sourceManeuver.subList(m, sourceManeuver.size()));
+							sourceManeuver.removeAll(sourceManeuver.subList(m, sourceManeuver.size()));
+							hasMove = true;
+
+							// face up the last card after the movingCard (if not empty)
+							if (sourceManeuver.size() > 0)
+								sourceManeuver.get(sourceManeuver.size()-1).setFaceup();
+
+							// assign movingCard last parent as destinationCard
+							movingCard.lastParent = destinationCard;
+
+							printResult();
+						}
+					}
+				}
+			}
+		}
+//uppercopied
+		if (!hasMove) {
+			System.out.println("No possible move in maneuver, picking talon card from deck");
+
+			// Draw card from deck
+			int drawCount = UserInput.drawcount;
+
+			ArrayList<Card> deckCards = deck.cards;
+			printResult();
+
+			Card talon = getTalon();
+			if (talon != null) {
+				// Assume that the first source of talon card is in the waste list
+				ArrayList<Card> talonSource = waste;
+
+				// check if this talon can be turn over to any foundation
+				for (int j = 0; j < foundation.length; j++) {
+					if (talon.canTurnOverToFoundation(foundation[j])) {
+						Card lastCardOnFoundation = Card.Blank;
+						if (foundation[j].size() > 1)
+						lastCardOnFoundation = foundation[j].get(foundation[j].size() - 1);
+						foundation[j].add(talon);
+						waste.remove(talon);
+						// Change the talon's source to this foundation
+						talonSource = foundation[j];
+						talon.lastParent = null;
+
+						break;
+					}
+				}
+
+				// run maneuver once again to fill in talon card
+				for (int i = 0; i < manuever.length; i++) {
+					ArrayList<Card> destinationManeuver = manuever[i];
+
+					// move the talon card in this blank maneuver if it is a king
+					if (destinationManeuver.size() < 1) {
+						if (talon.getRank() == Rank.KING) {
+							// move the talon to blank maneuver
+							if (talon.lastParent != null) {
+								destinationManeuver.add(talon);
+								waste.remove(talon);
+								talon.lastParent = null;
+							}
+						}
+					}
+
+					// skip moving cards as no card was found in this destination maneuver
+					if (destinationManeuver.size() < 1) continue;
+
+					Card destinationCard = destinationManeuver.get(destinationManeuver.size() - 1);
+					if (talon.compareTo(destinationCard) == -1) {
+						if (talon.lastParent != destinationCard) {
+							// move the talon to the end of the maneuver
+							destinationManeuver.add(talon);
+
+							// remove talon to its depending on its source
+							talonSource.remove(talon);
+
+							// set hasMove to true to end the loop check
+							hasMove = true;
+
+							printResult();
+							talon.lastParent = destinationCard;
+							break;
+						}
+					}
+				}
+			}
+
+			// draw cards to waste
+			if (deckCards.size() > 0) {
+				// If the deck is not empty
+				for (int i = 0; i < drawCount; i++) {
+					// Push cards to talon n times
+					if (!deckCards.isEmpty()) {
+						Card drawCard = deckCards.get(deckCards.size() - 1);
+						waste.add(drawCard);
+						drawCard.setFaceup();
+						deckCards.remove(deckCards.size() - 1);
+
+					}
+				}
+			} else {
+				// Put all card in waste list into the deck
+				System.out.println("Resetting deck");
+				deck.cards = new ArrayList<Card>(waste);
+				Collections.reverse(deck.cards);
+				waste.clear();
+				// increment lose indicator
+				currentIndicator++;
+			}
+		}
+		System.out.println("--------------------");
+		printResult();
+		System.out.println("--------------------");
+		//pressAnyKeyToContinue();
+//uppercopied
+		
+		if (!foundationHasAllKing()) {
+			// reset lose indicator to zero if there is any move happened last maneuver
+			if (hasMove) {currentIndicator = 0;} 
+
+			if (currentIndicator <= loseIndicator) {
+				executeProcedure();
+			} else {
+				System.out.println("You've lost the game!");
+				System.out.println("Score: " + UserInput.gamewon + " out of " + UserInput.gameplayed);
+				printResult();
+			}
+		} else {
+			UserInput.gamewon++;
+			System.out.println("You've won the game!");
+			System.out.println("Score: " + UserInput.gamewon + " out of " + UserInput.gameplayed);
+		}
+	}
 	//uppercopied
 	//printBoardChange
-	private void printResult() {
+	private synchronized void printResult() {
 		int deckCount = deck.cards.size();
 
 		String wasteCards = "";
@@ -577,7 +579,7 @@ public class GameManager{
 	}
 
 
-	public boolean foundationHasAllKing() {
+	public synchronized boolean foundationHasAllKing() {
 		boolean allKing = false;
 
 		for (int f = 0; f < foundation.length; f++) {
@@ -599,16 +601,16 @@ public class GameManager{
 		}
 		return allKing;
 	}
+////
+//	public void executeProcedure(){
 //
-	public void executeProcedure(){
-
-			moveToTalon();
-			moveToManuever();
-			DrawTalon();
-			foundationHasAllKing();
-			checkFoundation();
-		
-	}
+//			moveToTalon();
+//			moveToManuever();
+//			DrawTalon();
+//			foundationHasAllKing();
+//			checkFoundation();
+//		
+//	}
 	
 	private void pressAnyKeyToContinue() {
 		System.out.println("Press Enter key to continue...");
